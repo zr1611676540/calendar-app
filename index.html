@@ -100,10 +100,18 @@
             position: relative;
             padding: 4px 8px;
             cursor: pointer;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
 
         .time-cell:active {
             background: #f0f0f0;
+        }
+        
+        .time-cell.touch-active {
+            background: #e0e0e0;
         }
 
         .time-cell.empty {
@@ -120,6 +128,16 @@
             font-size: 13px;
             cursor: pointer;
             position: relative;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .task-card:active,
+        .task-card.touch-active {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
 
         .task-card.conflict {
@@ -170,9 +188,12 @@
             color: white;
             border: none;
             z-index: 200;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        .fab:active {
+        .fab:active,
+        .fab.touch-active {
             transform: scale(0.95);
         }
 
@@ -255,6 +276,12 @@
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .btn:active {
+            opacity: 0.8;
         }
 
         .btn-primary {
@@ -504,7 +531,7 @@
                 html += `
                     <div class="time-slot">
                         <div class="time-label">${hour.toString().padStart(2, '0')}:00</div>
-                        <div class="time-cell" onclick="openAddModal(${hour})">
+                        <div class="time-cell" onclick="openAddModal(${hour})" ontouchstart="openAddModal(${hour})">
                             ${hourTasks.map(t => renderTaskCard(t)).join('')}
                         </div>
                     </div>
@@ -513,6 +540,11 @@
 
             html += '</div>';
             view.innerHTML = html;
+            
+            // 添加触摸事件
+            setTimeout(() => {
+                view.querySelectorAll('.time-cell, .task-card').forEach(addTouchEvents);
+            }, 100);
         }
 
         function renderWeekView(view) {
@@ -557,7 +589,7 @@
 
                     const isToday = dateStr === formatDateISO(new Date());
                     
-                    html += `<div class="time-cell" style="background: ${isToday ? '#f0f7ff' : 'white'};" onclick="openAddModal(${hour}, '${dateStr}')">
+                    html += `<div class="time-cell" style="background: ${isToday ? '#f0f7ff' : 'white'};" onclick="openAddModal(${hour}, '${dateStr}')" ontouchstart="openAddModal(${hour}, '${dateStr}')">
                         ${hourTasks.map(t => renderTaskCard(t, true)).join('')}
                     </div>`;
                 });
@@ -574,6 +606,7 @@
             return `
                 <div class="task-card ${task.type} ${conflict ? 'conflict' : ''}" 
                      onclick="event.stopPropagation(); openEditModal(${task.id})"
+                     ontouchstart="event.stopPropagation(); openEditModal(${task.id})"
                      style="${compact ? 'font-size: 11px; padding: 4px 6px;' : ''}">
                     <div class="task-title">${task.title}</div>
                     <div class="task-time">${task.startTime} - ${task.endTime}</div>
@@ -748,6 +781,17 @@
             return d;
         }
 
+        // === 触摸事件处理 ===
+        function addTouchEvents(element) {
+            element.addEventListener('touchstart', function() {
+                this.classList.add('touch-active');
+            }, { passive: true });
+            
+            element.addEventListener('touchend', function() {
+                this.classList.remove('touch-active');
+            }, { passive: true });
+        }
+
         // === 初始化 ===
         document.addEventListener('DOMContentLoaded', () => {
             initDB().then(() => {
@@ -760,6 +804,15 @@
                     closeModal();
                 }
             });
+            
+            // 防止双击缩放
+            document.addEventListener('dblclick', function(event) {
+                event.preventDefault();
+            }, { passive: false });
+            
+            // 添加 FAB 触摸反馈
+            const fab = document.querySelector('.fab');
+            if (fab) addTouchEvents(fab);
         });
 
         // === Service Worker 注册 ===
