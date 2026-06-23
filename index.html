@@ -138,6 +138,130 @@
             background: #f0f0f0;
         }
 
+        /* ===== 时间线视图 ===== */
+        .day-view-wrapper {
+            position: relative;
+        }
+
+        .day-view-wrapper .time-slot {
+            height: 60px;
+            min-height: 60px;
+        }
+
+        .week-view-wrapper {
+            position: relative;
+        }
+
+        .week-header {
+            display: grid;
+            grid-template-columns: 50px repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e5e5;
+            padding: 1px;
+            height: 54px;
+            min-height: 54px;
+        }
+
+        .week-day {
+            text-align: center;
+            padding: 8px 4px;
+            background: white;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .week-day.today {
+            background: #4A90D9;
+            color: white;
+        }
+
+        .week-grid {
+            height: 1440px;
+        }
+
+        .week-grid .time-slot {
+            grid-template-columns: 50px repeat(7, 1fr);
+            height: 60px;
+            min-height: 60px;
+        }
+
+        .week-grid .time-cell {
+            border-right: 1px solid #f0f0f0;
+            min-height: 60px;
+        }
+
+        .week-grid .time-cell.today {
+            background: #f0f7ff;
+        }
+
+        .task-overlay {
+            position: absolute;
+            left: 50px;
+            right: 0;
+            height: 1440px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .day-view-wrapper .task-overlay {
+            top: 0;
+        }
+
+        .week-view-wrapper .task-overlay {
+            top: 54px;
+        }
+
+        .timeline-task {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: white;
+            overflow: hidden;
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            border-left: 3px solid rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+        }
+
+        .timeline-task:active {
+            opacity: 0.85;
+            transform: scale(0.99);
+        }
+
+        .timeline-task.conflict {
+            border-left-color: #FF0000;
+            box-shadow: 0 0 0 2px rgba(255,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .timeline-task .task-title {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+
+        .timeline-task .task-time {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-top: 1px;
+        }
+
+        .timeline-task .task-type-icon {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-top: 1px;
+        }
+
+        /* 遗留任务卡片样式 */
         .task-card {
             background: #4A90D9;
             color: white;
@@ -158,19 +282,6 @@
         .task-card.meeting { background: #9B59B6; }
         .task-card.personal { background: #27AE60; }
         .task-card.other { background: #F39C12; }
-
-        .task-title {
-            font-weight: 500;
-            margin-bottom: 2px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .task-time {
-            font-size: 10px;
-            opacity: 0.9;
-        }
 
         .fab {
             position: fixed;
@@ -302,37 +413,60 @@
             margin-top: 12px;
         }
 
-        /* 周视图 */
-        .week-header {
-            display: grid;
-            grid-template-columns: 50px repeat(7, 1fr);
-            gap: 1px;
-            background: #e5e5e5;
-            padding: 1px;
+        /* ===== 颜色选择器 ===== */
+        .color-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
         }
 
-        .week-day {
-            text-align: center;
-            padding: 8px 4px;
-            background: white;
-            font-size: 12px;
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.15s, border-color 0.15s;
+            position: relative;
         }
 
-        .week-day.today {
-            background: #4A90D9;
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.15);
+        }
+
+        .color-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
         }
 
-        .week-grid .time-slot {
-            grid-template-columns: 50px repeat(7, 1fr);
+        /* ===== 通知按钮 ===== */
+        .notif-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 4px;
+            transition: opacity 0.2s;
         }
 
-        .week-grid .time-cell {
-            border-right: 1px solid #f0f0f0;
+        .notif-btn:active {
+            background: rgba(255,255,255,0.3);
         }
 
-        .week-grid .time-cell.today {
-            background: #f0f7ff;
+        .notif-btn.disabled {
+            opacity: 0.4;
         }
     </style>
 </head>
@@ -349,6 +483,7 @@
                 </div>
             </div>
             <button onclick="nextPeriod()">后一天 ▶</button>
+            <button class="notif-btn" id="notifBtn" onclick="toggleNotification()" title="开启通知">🔔</button>
         </div>
     </div>
 
@@ -387,11 +522,28 @@
 
             <div class="form-group">
                 <label>任务类型</label>
-                <select id="taskType">
+                <select id="taskType" onchange="onTypeChange()">
                     <option value="work">💼 工作</option>
                     <option value="meeting">📋 会议</option>
                     <option value="personal">🏠 个人</option>
                     <option value="other">📌 其他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>任务颜色 <span style="color:#999;font-size:12px;">（默认跟随类型）</span></label>
+                <div class="color-picker" id="colorPicker"></div>
+            </div>
+
+            <div class="form-group">
+                <label>提前提醒</label>
+                <select id="taskReminder">
+                    <option value="0">不提醒</option>
+                    <option value="5">提前 5 分钟</option>
+                    <option value="10">提前 10 分钟</option>
+                    <option value="15">提前 15 分钟</option>
+                    <option value="30">提前 30 分钟</option>
+                    <option value="60">提前 1 小时</option>
                 </select>
             </div>
 
@@ -416,14 +568,52 @@
         let currentView = 'day';
         let tasks = [];
         let editingTaskId = null;
+        let selectedColor = null;
+        let notificationEnabled = false;
+        let notificationTimer = null;
+
+        // === 配置 ===
+        const STORAGE_KEY = 'calendar_tasks_v2';
+        const NOTIFIED_KEY = 'calendar_notified_v2';
+
+        const TASK_COLORS = [
+            '#4A90D9', '#FF6B6B', '#9B59B6', '#27AE60',
+            '#F39C12', '#E74C3C', '#1ABC9C', '#3498DB',
+            '#E91E63', '#673AB7', '#2196F3', '#00BCD4',
+            '#8BC34A', '#FF9800', '#795548', '#607D8B'
+        ];
+
+        const TYPE_COLORS = {
+            work: '#4A90D9',
+            meeting: '#9B59B6',
+            personal: '#27AE60',
+            other: '#F39C12'
+        };
+
+        const TYPE_ICONS = {
+            work: '💼',
+            meeting: '📋',
+            personal: '🏠',
+            other: '📌'
+        };
 
         // === localStorage 初始化 ===
-        const STORAGE_KEY = 'calendar_tasks_v1';
-
         function loadTasks() {
             try {
                 const stored = localStorage.getItem(STORAGE_KEY);
-                tasks = stored ? JSON.parse(stored) : [];
+                if (stored) {
+                    tasks = JSON.parse(stored);
+                    // 兼容旧数据：将旧版任务迁移到新版格式
+                    tasks.forEach(t => {
+                        if (t.startHour !== undefined && t.endHour === undefined) {
+                            // 旧格式迁移
+                            t.startTime = t.startTime || `${t.startHour.toString().padStart(2,'0')}:00`;
+                            t.endTime = t.endTime || `${(t.startHour+1).toString().padStart(2,'0')}:00`;
+                        }
+                    });
+                } else {
+                    tasks = [];
+                }
             } catch (e) {
                 console.error('Load error:', e);
                 tasks = [];
@@ -458,23 +648,26 @@
             const dateStr = formatDateISO(currentDate);
             const dayTasks = tasks.filter(t => t.date === dateStr);
 
-            let html = '';
+            let html = '<div class="day-view-wrapper">';
             
+            // 24小时网格背景
             for (let hour = 0; hour < 24; hour++) {
-                const hourTasks = dayTasks.filter(t => {
-                    const startHour = parseInt(t.startTime.split(':')[0]);
-                    return startHour === hour;
-                });
-
                 html += `
                     <div class="time-slot">
                         <div class="time-label">${hour.toString().padStart(2, '0')}:00</div>
-                        <div class="time-cell" onclick="openAddModal(${hour})">
-                            ${hourTasks.map(t => renderTaskCard(t)).join('')}
-                        </div>
+                        <div class="time-cell" onclick="openAddModal(${hour})"></div>
                     </div>
                 `;
             }
+            
+            html += '</div>';
+
+            // 任务覆盖层 - 绝对定位
+            html += '<div class="task-overlay">';
+            dayTasks.forEach(task => {
+                html += renderTimelineTask(task);
+            });
+            html += '</div>';
 
             view.innerHTML = html;
         }
@@ -492,8 +685,10 @@
             const today = formatDateISO(new Date());
             const weekDaysNames = ['日', '一', '二', '三', '四', '五', '六'];
 
-            let html = '<div class="week-header"><div></div>';
-            
+            let html = '<div class="week-view-wrapper">';
+
+            // 周头部
+            html += '<div class="week-header"><div></div>';
             weekDays.forEach((day, i) => {
                 const dateStr = formatDateISO(day);
                 const isToday = dateStr === today;
@@ -504,6 +699,7 @@
             });
             html += '</div>';
 
+            // 周网格
             html += '<div class="week-grid">';
             for (let hour = 0; hour < 24; hour++) {
                 html += `<div class="time-slot">
@@ -511,33 +707,57 @@
                 
                 weekDays.forEach(day => {
                     const dateStr = formatDateISO(day);
-                    const hourTasks = tasks.filter(t => {
-                        if (t.date !== dateStr) return false;
-                        const startHour = parseInt(t.startTime.split(':')[0]);
-                        return startHour === hour;
-                    });
-
                     const isToday = dateStr === today;
-                    
-                    html += `<div class="time-cell ${isToday ? 'today' : ''}" onclick="openAddModal(${hour}, '${dateStr}')">
-                        ${hourTasks.map(t => renderTaskCard(t, true)).join('')}
-                    </div>`;
+                    html += `<div class="time-cell ${isToday ? 'today' : ''}" onclick="openAddModal(${hour}, '${dateStr}')"></div>`;
                 });
 
                 html += '</div>';
             }
             html += '</div>';
 
+            // 任务覆盖层
+            html += '<div class="task-overlay">';
+            weekDays.forEach((day, dayIndex) => {
+                const dateStr = formatDateISO(day);
+                const dayTasks = tasks.filter(t => t.date === dateStr);
+                dayTasks.forEach(task => {
+                    html += renderTimelineTask(task, true, dayIndex);
+                });
+            });
+            html += '</div>';
+
+            html += '</div>';
+
             view.innerHTML = html;
         }
 
-        function renderTaskCard(task, compact = false) {
+        function renderTimelineTask(task, isWeek = false, dayIndex = 0) {
+            const startMinutes = timeToMinutes(task.startTime);
+            const endMinutes = timeToMinutes(task.endTime);
+            const duration = Math.max(endMinutes - startMinutes, 20);
+
             const conflict = hasConflict(task);
+            const color = task.color || TYPE_COLORS[task.type] || '#4A90D9';
+            const icon = TYPE_ICONS[task.type] || '📌';
+
+            let style = `top: ${startMinutes}px; height: ${duration}px; background: ${color};`;
+
+            if (isWeek) {
+                const leftPct = (dayIndex / 7) * 100;
+                const widthPct = 100 / 7;
+                style += ` left: ${leftPct}%; width: ${widthPct}%;`;
+            }
+
+            const showTime = duration >= 28;
+            const showIcon = duration >= 22;
+
             return `
-                <div class="task-card ${task.type} ${conflict ? 'conflict' : ''}" 
+                <div class="timeline-task ${conflict ? 'conflict' : ''}" 
+                     style="${style}"
                      onclick="event.stopPropagation(); openEditModal(${task.id})">
                     <div class="task-title">${escapeHtml(task.title)}</div>
-                    <div class="task-time">${task.startTime}-${task.endTime}</div>
+                    ${showTime ? `<div class="task-time">${task.startTime}-${task.endTime}</div>` : ''}
+                    ${showIcon && !showTime ? `<div class="task-type-icon">${icon}</div>` : ''}
                 </div>
             `;
         }
@@ -584,6 +804,40 @@
             }
         }
 
+        // === 颜色选择器 ===
+        function initColorPicker() {
+            const picker = document.getElementById('colorPicker');
+            picker.innerHTML = '';
+            
+            TASK_COLORS.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-option';
+                div.style.backgroundColor = color;
+                div.dataset.color = color;
+                if (selectedColor === color) {
+                    div.classList.add('selected');
+                }
+                div.onclick = () => selectColor(color);
+                picker.appendChild(div);
+            });
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.color === color);
+            });
+        }
+
+        function onTypeChange() {
+            const type = document.getElementById('taskType').value;
+            // 如果用户没有选择自定义颜色，则自动切换到类型的默认颜色
+            if (!selectedColor) {
+                const defaultColor = TYPE_COLORS[type];
+                selectColor(defaultColor);
+            }
+        }
+
         // === 模态框操作 ===
         function openAddModal(hour = 9, dateStr = null) {
             editingTaskId = null;
@@ -595,7 +849,12 @@
             document.getElementById('taskDate').value = dateStr || formatDateISO(currentDate);
             document.getElementById('taskStartTime').value = `${hour.toString().padStart(2, '0')}:00`;
             document.getElementById('taskEndTime').value = `${(hour + 1).toString().padStart(2, '0')}:00`;
+            document.getElementById('taskReminder').value = '0';
             document.getElementById('conflictWarning').classList.remove('show');
+            
+            selectedColor = null;
+            initColorPicker();
+            onTypeChange();
             
             document.getElementById('taskModal').classList.add('active');
         }
@@ -614,8 +873,12 @@
             document.getElementById('taskEndTime').value = task.endTime;
             document.getElementById('taskType').value = task.type;
             document.getElementById('taskNotes').value = task.notes || '';
+            document.getElementById('taskReminder').value = task.reminderMinutes || '0';
             document.getElementById('conflictWarning').classList.remove('show');
 
+            selectedColor = task.color || null;
+            initColorPicker();
+            
             document.getElementById('taskModal').classList.add('active');
         }
 
@@ -631,6 +894,8 @@
                 startTime: document.getElementById('taskStartTime').value,
                 endTime: document.getElementById('taskEndTime').value,
                 type: document.getElementById('taskType').value,
+                color: selectedColor,
+                reminderMinutes: parseInt(document.getElementById('taskReminder').value) || 0,
                 notes: document.getElementById('taskNotes').value
             };
         }
@@ -733,9 +998,148 @@
             return div.innerHTML;
         }
 
+        // === 通知功能 ===
+        function initNotifications() {
+            if (!('Notification' in window)) {
+                document.getElementById('notifBtn').style.display = 'none';
+                return;
+            }
+            
+            notificationEnabled = Notification.permission === 'granted';
+            updateNotificationBtn();
+            
+            if (notificationEnabled) {
+                startNotificationTimer();
+            }
+        }
+
+        function toggleNotification() {
+            if (!('Notification' in window)) {
+                alert('您的设备不支持通知功能');
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                notificationEnabled = !notificationEnabled;
+                updateNotificationBtn();
+                if (notificationEnabled) {
+                    startNotificationTimer();
+                    new Notification('🔔 通知已开启', {
+                        body: '您将在任务开始前收到提醒',
+                        icon: 'icon.svg'
+                    });
+                } else {
+                    stopNotificationTimer();
+                }
+            } else if (Notification.permission === 'denied') {
+                alert('通知权限已被拒绝，请在 iOS 设置 > Safari > 通知 中手动开启');
+            } else {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        notificationEnabled = true;
+                        updateNotificationBtn();
+                        startNotificationTimer();
+                        new Notification('🔔 通知已开启', {
+                            body: '您将在任务开始前收到提醒',
+                            icon: 'icon.svg'
+                        });
+                    } else {
+                        alert('需要通知权限才能发送提醒，请重新点击按钮授权');
+                    }
+                });
+            }
+        }
+
+        function updateNotificationBtn() {
+            const btn = document.getElementById('notifBtn');
+            if (notificationEnabled) {
+                btn.textContent = '🔔';
+                btn.classList.remove('disabled');
+                btn.title = '通知已开启';
+            } else {
+                btn.textContent = '🔕';
+                btn.classList.add('disabled');
+                btn.title = '点击开启通知';
+            }
+        }
+
+        function startNotificationTimer() {
+            if (notificationTimer) return;
+            checkNotifications(); // 立即检查一次（处理错过的通知）
+            notificationTimer = setInterval(checkNotifications, 30000); // 每30秒检查
+        }
+
+        function stopNotificationTimer() {
+            if (notificationTimer) {
+                clearInterval(notificationTimer);
+                notificationTimer = null;
+            }
+        }
+
+        function checkNotifications() {
+            if (!notificationEnabled) return;
+            if (Notification.permission !== 'granted') return;
+            
+            const now = new Date();
+            const currentDateStr = formatDateISO(now);
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const currentHourMin = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            
+            let notified = [];
+            try {
+                notified = JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '[]');
+            } catch(e) {}
+            
+            tasks.forEach(task => {
+                if (!task.reminderMinutes || task.reminderMinutes <= 0) return;
+                if (task.date !== currentDateStr) return;
+                
+                const notifyId = `task_${task.id}_${task.date}_${task.startTime}_${task.reminderMinutes}`;
+                if (notified.includes(notifyId)) return;
+                
+                const taskStartMinutes = timeToMinutes(task.startTime);
+                const reminderMinutes = parseInt(task.reminderMinutes);
+                const notifyAtMinutes = taskStartMinutes - reminderMinutes;
+                
+                // 当前时间已过提醒时间且任务尚未开始
+                if (currentMinutes >= notifyAtMinutes && currentMinutes < taskStartMinutes) {
+                    sendNotification(task, reminderMinutes);
+                    notified.push(notifyId);
+                }
+            });
+            
+            // 清理过期的通知记录（保留今天的）
+            const todayStr = formatDateISO(now);
+            const filtered = notified.filter(id => {
+                const parts = id.split('_');
+                return parts.length >= 3 && parts[2] >= todayStr;
+            });
+            
+            localStorage.setItem(NOTIFIED_KEY, JSON.stringify(filtered));
+        }
+
+        function sendNotification(task, reminderMinutes) {
+            try {
+                const typeLabel = {work:'💼工作', meeting:'📋会议', personal:'🏠个人', other:'📌其他'}[task.type] || '📌任务';
+                const mins = reminderMinutes < 60 ? `${reminderMinutes}分钟` : `${reminderMinutes/60}小时`;
+                
+                new Notification(`⏰ ${typeLabel}提醒`, {
+                    body: `${task.title}\n开始时间：${task.startTime}（${mins}后）`,
+                    icon: 'icon.svg',
+                    badge: 'icon.svg',
+                    tag: `calendar-task-${task.id}`,
+                    requireInteraction: false,
+                    silent: false
+                });
+            } catch (e) {
+                console.error('Notification error:', e);
+            }
+        }
+
         // === 初始化 ===
         document.addEventListener('DOMContentLoaded', () => {
             loadTasks();
+            initNotifications();
         });
 
         // === Service Worker ===
