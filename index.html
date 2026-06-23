@@ -10,25 +10,32 @@
     <link rel="manifest" href="manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f7; min-height: 100vh; padding-bottom: 80px; overscroll-behavior: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f7; min-height: 100vh; overscroll-behavior: none; }
 
-        .header { background: linear-gradient(135deg, #4A90D9 0%, #357ABD 100%); color: white; padding: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding-top: max(16px, env(safe-area-inset-top)); }
+        /* ===== 固定顶部区域 ===== */
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header { background: linear-gradient(135deg, #4A90D9 0%, #357ABD 100%); color: white; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding-top: max(16px, env(safe-area-inset-top)); }
         .header h1 { font-size: 20px; font-weight: 600; text-align: center; margin-bottom: 12px; }
 
         .date-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .date-nav button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 14px; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; }
         .date-nav button:active { background: rgba(255,255,255,0.3); }
-
         .current-date { font-size: 16px; font-weight: 500; text-align: center; flex: 1; }
-        .view-toggle { display: inline-flex; background: rgba(255,255,255,0.2); border-radius: 8px; padding: 4px; margin-left: 8px; }
-        .view-toggle button { background: transparent; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
-        .view-toggle button.active { background: white; color: #4A90D9; }
 
-        /* ===== 月总览（小月历）===== */
+        .notif-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
+        .notif-btn:active { background: rgba(255,255,255,0.3); }
+        .notif-btn.disabled { opacity: 0.4; }
+
+        /* ===== 月总览 ===== */
         .month-overview {
             background: white;
-            margin: 12px 16px 0;
-            border-radius: 12px;
+            margin: 0 16px;
+            border-radius: 0 0 12px 12px;
             padding: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
@@ -39,180 +46,222 @@
             margin-bottom: 8px;
             padding: 0 4px;
         }
-        .month-overview-header span {
-            font-size: 15px;
-            font-weight: 600;
-            color: #333;
-        }
-        .month-overview-header .mini-nav {
-            display: flex;
-            gap: 4px;
-        }
+        .month-overview-header span { font-size: 15px; font-weight: 600; color: #333; }
+        .month-overview-header .mini-nav { display: flex; gap: 4px; }
         .month-overview-header .mini-nav button {
-            background: #f0f0f0;
-            border: none;
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 12px;
-            color: #666;
-            cursor: pointer;
+            background: #f0f0f0; border: none; border-radius: 6px;
+            padding: 4px 10px; font-size: 12px; color: #666; cursor: pointer;
         }
-        .month-overview-header .mini-nav button:active {
-            background: #e0e0e0;
-        }
+        .month-overview-header .mini-nav button:active { background: #e0e0e0; }
 
-        .mini-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            padding: 4px 0;
-            font-weight: 500;
-        }
-        .mini-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
+        .mini-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; color: #999; padding: 4px 0; font-weight: 500; }
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
         .mini-cell {
-            aspect-ratio: 1;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            font-size: 13px;
-            color: #333;
-            min-height: 36px;
+            aspect-ratio: 1; border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; font-size: 14px; color: #333; min-height: 40px;
         }
         .mini-cell:active { background: #f0f0f0; }
-        .mini-cell.selected {
-            background: #4A90D9;
-            color: white;
-            box-shadow: 0 2px 6px rgba(74,144,217,0.3);
-        }
-        .mini-cell.today:not(.selected) {
-            color: #4A90D9;
-            font-weight: 700;
-            border: 1.5px solid #4A90D9;
-        }
+        .mini-cell.today:not(.selected) { color: #4A90D9; font-weight: 700; border: 1.5px solid #4A90D9; }
+        .mini-cell.selected { background: #4A90D9; color: white; box-shadow: 0 2px 6px rgba(74,144,217,0.3); }
         .mini-cell.other-month { color: #bbb; }
-        .mini-dots {
-            display: flex;
-            gap: 2px;
-            margin-top: 1px;
-            position: absolute;
-            bottom: 3px;
+        .mini-cell .mini-dots { display: flex; gap: 2px; margin-top: 1px; position: absolute; bottom: 3px; }
+        .mini-dot { width: 4px; height: 4px; border-radius: 50%; }
+        .mini-cell.selected .mini-dot { background: rgba(255,255,255,0.8) !important; }
+
+        /* ===== 主内容区（可滚动）===== */
+        .main-content { padding: 16px; min-height: 200px; }
+        .empty-hint { text-align: center; color: #999; padding: 60px 20px; font-size: 14px; }
+
+        /* ===== 日任务列表弹窗 ===== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: none;
+            align-items: center; justify-content: center;
+            z-index: 300; padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
-        .mini-dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-        }
-        .mini-cell.selected .mini-dot {
-            background: rgba(255,255,255,0.8) !important;
-        }
-
-        /* ===== 日历详情视图 ===== */
-        .calendar-view {
-            background: white;
-            margin: 12px 16px 16px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .time-slot { display: grid; grid-template-columns: 50px 1fr; border-bottom: 1px solid #e5e5e5; min-height: 60px; }
-        .time-slot:last-child { border-bottom: none; }
-        .time-label { background: #fafafa; color: #666; font-size: 11px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #e5e5e5; padding: 4px; }
-        .time-cell { position: relative; padding: 4px 8px; min-height: 52px; touch-action: manipulation; }
-        .time-cell:active { background: #f0f0f0; }
-        .day-view-wrapper { position: relative; }
-        .day-view-wrapper .time-slot { height: 60px; min-height: 60px; }
-        .week-view-wrapper { position: relative; }
-        .week-header { display: grid; grid-template-columns: 50px repeat(7, 1fr); gap: 1px; background: #e5e5e5; padding: 1px; height: 54px; min-height: 54px; }
-        .week-day { text-align: center; padding: 8px 4px; background: white; font-size: 12px; display: flex; flex-direction: column; justify-content: center; }
-        .week-day.today { background: #4A90D9; color: white; }
-        .week-grid { height: 1440px; }
-        .week-grid .time-slot { grid-template-columns: 50px repeat(7, 1fr); height: 60px; min-height: 60px; }
-        .week-grid .time-cell { border-right: 1px solid #f0f0f0; min-height: 60px; }
-        .week-grid .time-cell.today { background: #f0f7ff; }
-
-        .task-overlay { position: absolute; left: 50px; right: 0; height: 1440px; pointer-events: none; z-index: 10; }
-        .day-view-wrapper .task-overlay { top: 0; }
-        .week-view-wrapper .task-overlay { top: 54px; }
-        .timeline-task { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: white; overflow: hidden; pointer-events: auto; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); border-left: 3px solid rgba(255,255,255,0.5); display: flex; flex-direction: column; line-height: 1.3; }
-        .timeline-task:active { opacity: 0.85; transform: scale(0.99); }
-        .timeline-task.conflict { border-left-color: #FF0000; box-shadow: 0 0 0 2px rgba(255,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2); }
-        .timeline-task .task-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
-        .timeline-task .task-time { font-size: 10px; opacity: 0.9; margin-top: 1px; }
-        .timeline-task .task-type-icon { font-size: 10px; opacity: 0.8; margin-top: 1px; }
-
-        /* ===== FAB ===== */
-        .fab { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); right: 24px; width: 56px; height: 56px; background: linear-gradient(135deg, #4A90D9 0%, #357ABD 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(74,144,217,0.4); font-size: 32px; color: white; border: none; z-index: 200; touch-action: manipulation; }
-        .fab:active { transform: scale(0.95); }
-
-        /* ===== 模态框 - 居中 ===== */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
         .modal-overlay.active { display: flex; }
-        .modal { background: white; border-radius: 16px; width: 100%; max-width: 420px; max-height: 80vh; overflow-y: auto; padding: 24px; }
-        .modal h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+
+        .modal-card {
+            background: white; border-radius: 16px;
+            width: 100%; max-width: 420px; max-height: 82vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+        .modal-header h2 { font-size: 17px; color: #333; }
+        .modal-header .close-btn {
+            background: #f0f0f0; border: none; border-radius: 50%;
+            width: 32px; height: 32px; font-size: 18px; color: #666;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-header .close-btn:active { background: #e0e0e0; }
+
+        .modal-body {
+            overflow-y: auto;
+            padding: 12px 16px;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 12px 16px 16px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        /* 日任务列表 */
+        .day-task-item {
+            display: flex; gap: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #fafafa;
+            border-left: 4px solid #ddd;
+            transition: background 0.15s;
+        }
+        .day-task-item:active { background: #f0f0f0; }
+        .day-task-item.completed { opacity: 0.6; }
+        .day-task-item.completed .task-title { text-decoration: line-through; color: #999; }
+
+        .task-checkbox {
+            width: 22px; height: 22px;
+            border: 2px solid #ccc; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .task-checkbox.checked {
+            background: #27AE60; border-color: #27AE60;
+        }
+        .task-checkbox.checked::after {
+            content: '\2713'; color: white; font-size: 13px; font-weight: bold;
+        }
+
+        .task-info { flex: 1; min-width: 0; }
+        .task-info-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 4px;
+        }
+        .task-title { font-size: 15px; font-weight: 600; color: #333; }
+        .task-time-range {
+            font-size: 12px; color: #999;
+            background: #f0f0f0; padding: 2px 8px;
+            border-radius: 10px; white-space: nowrap;
+        }
+        .task-type-tag {
+            font-size: 11px; color: #999; margin-bottom: 6px;
+        }
+        .completion-textarea {
+            width: 100%; padding: 8px 10px;
+            border: 1px solid #e5e5e5; border-radius: 8px;
+            font-size: 13px; font-family: inherit;
+            resize: none; min-height: 56px;
+            background: white; color: #555;
+            -webkit-appearance: none;
+        }
+        .completion-textarea:focus { outline: none; border-color: #4A90D9; }
+        .completion-textarea::placeholder { color: #bbb; }
+
+        .task-actions {
+            display: flex; gap: 8px; margin-top: 8px;
+        }
+        .task-actions button {
+            background: transparent; border: none;
+            font-size: 12px; color: #999; cursor: pointer;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .task-actions button:active { background: #eee; }
+
+        .day-empty { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
+
+        .btn-add-task {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #4A90D9 0%, #357ABD 100%);
+            color: white; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 500; cursor: pointer;
+        }
+        .btn-add-task:active { opacity: 0.85; }
+
+        /* ===== 添加/编辑任务弹窗 ===== */
+        .form-modal {
+            background: white; border-radius: 16px;
+            width: 100%; max-width: 420px; max-height: 85vh;
+            overflow-y: auto; padding: 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+        }
+        .form-modal h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; -webkit-appearance: none; }
-        .form-group textarea { resize: none; min-height: 80px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px;
+            border: 1px solid #ddd; border-radius: 8px;
+            font-size: 16px; font-family: inherit;
+            -webkit-appearance: none;
+        }
+        .form-group textarea { resize: none; min-height: 60px; }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
         .btn-group { display: flex; gap: 12px; margin-top: 24px; }
-        .btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 500; touch-action: manipulation; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 500; touch-action: manipulation; cursor: pointer; }
         .btn-primary { background: #4A90D9; color: white; }
         .btn-secondary { background: #f0f0f0; color: #333; }
         .btn-danger { background: #FF6B6B; color: white; }
         .btn:active { opacity: 0.8; }
-        .conflict-warning { background: #FFF3CD; border: 1px solid #FFC107; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
-        .conflict-warning.show { display: block; }
 
-        /* ===== 颜色选择器 ===== */
         .color-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
         .color-option { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.15s, border-color 0.15s; position: relative; }
         .color-option.selected { border-color: #333; transform: scale(1.15); }
         .color-option.selected::after { content: '\2713'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 14px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
 
-        /* ===== 通知按钮 ===== */
-        .notif-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-left: 4px; transition: opacity 0.2s; }
-        .notif-btn:active { background: rgba(255,255,255,0.3); }
-        .notif-btn.disabled { opacity: 0.4; }
+        .conflict-warning { background: #FFF3CD; border: 1px solid #FFC107; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
+        .conflict-warning.show { display: block; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📅 日程日历</h1>
-        <div class="date-nav">
-            <button onclick="prevPeriod()" id="prevBtn">◀ 前一天</button>
-            <div>
+    <div class="sticky-top">
+        <div class="header">
+            <h1>📅 日程日历</h1>
+            <div class="date-nav">
+                <button onclick="shiftMonth(-1)">◀ 上月</button>
                 <span class="current-date" id="currentDate"></span>
-                <div class="view-toggle">
-                    <button id="dayViewBtn" class="active" onclick="setView('day')">日</button>
-                    <button id="weekViewBtn" onclick="setView('week')">周</button>
-                </div>
+                <button onclick="shiftMonth(1)">下月 ▶</button>
+                <button class="notif-btn" id="notifBtn" onclick="toggleNotification()" title="开启通知">🔔</button>
             </div>
-            <button onclick="nextPeriod()" id="nextBtn">后一天 ▶</button>
-            <button class="notif-btn" id="notifBtn" onclick="toggleNotification()" title="开启通知">🔔</button>
+        </div>
+        <div class="month-overview" id="monthOverview"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="empty-hint">
+            👆 点击上方日历中的日期<br>查看该日任务详情
         </div>
     </div>
 
-    <!-- 月总览小月历 -->
-    <div class="month-overview" id="monthOverview"></div>
+    <!-- 日任务列表弹窗 -->
+    <div class="modal-overlay" id="dayTasksModal" onclick="if(event.target===this)closeDayTasksModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="dayTasksTitle">任务列表</h2>
+                <button class="close-btn" onclick="closeDayTasksModal()">✕</button>
+            </div>
+            <div class="modal-body" id="dayTasksBody"></div>
+            <div class="modal-footer">
+                <button class="btn-add-task" onclick="openAddTaskFromDay()">+ 添加新任务</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- 日/周详细视图 -->
-    <div class="calendar-view" id="calendarView"></div>
-
-    <button class="fab" onclick="openAddModal()">+</button>
-
-    <div class="modal-overlay" id="taskModal" onclick="if(event.target===this)closeModal()">
-        <div class="modal">
-            <h2 id="modalTitle">添加任务</h2>
+    <!-- 添加/编辑任务弹窗 -->
+    <div class="modal-overlay" id="taskFormModal" onclick="if(event.target===this)closeTaskFormModal()">
+        <div class="form-modal">
+            <h2 id="formModalTitle">添加任务</h2>
             <div class="conflict-warning" id="conflictWarning"></div>
 
             <div class="form-group">
@@ -225,14 +274,15 @@
                 <input type="date" id="taskDate">
             </div>
 
-            <div class="form-group">
-                <label>开始时间</label>
-                <input type="time" id="taskStartTime" onchange="checkConflicts()">
-            </div>
-
-            <div class="form-group">
-                <label>结束时间</label>
-                <input type="time" id="taskEndTime" onchange="checkConflicts()">
+            <div class="row-2">
+                <div class="form-group">
+                    <label>开始时间</label>
+                    <input type="time" id="taskStartTime" onchange="checkConflicts()">
+                </div>
+                <div class="form-group">
+                    <label>结束时间</label>
+                    <input type="time" id="taskEndTime" onchange="checkConflicts()">
+                </div>
             </div>
 
             <div class="form-group">
@@ -263,14 +313,14 @@
             </div>
 
             <div class="form-group">
-                <label>备注</label>
-                <textarea id="taskNotes" placeholder="可选备注..."></textarea>
+                <label>完成情况说明</label>
+                <textarea id="taskCompletionNote" placeholder="记录任务完成情况、进度说明..."></textarea>
             </div>
 
             <input type="hidden" id="taskId">
 
             <div class="btn-group">
-                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-secondary" onclick="closeTaskFormModal()">取消</button>
                 <button class="btn btn-danger" id="deleteBtn" style="display: none;" onclick="deleteTask()">删除</button>
                 <button class="btn btn-primary" onclick="saveTask()">保存</button>
             </div>
@@ -279,18 +329,19 @@
 
     <script>
         let currentDate = new Date();
-        let currentView = 'day';
         let tasks = [];
         let editingTaskId = null;
         let selectedColor = null;
         let notificationEnabled = false;
         let notificationTimer = null;
+        let currentDayStr = null;
 
-        const STORAGE_KEY = 'calendar_tasks_v2';
-        const NOTIFIED_KEY = 'calendar_notified_v2';
+        const STORAGE_KEY = 'calendar_tasks_v3';
+        const NOTIFIED_KEY = 'calendar_notified_v3';
         const TASK_COLORS = ['#4A90D9','#FF6B6B','#9B59B6','#27AE60','#F39C12','#E74C3C','#1ABC9C','#3498DB','#E91E63','#673AB7','#2196F3','#00BCD4','#8BC34A','#FF9800','#795548','#607D8B'];
         const TYPE_COLORS = { work:'#4A90D9', meeting:'#9B59B6', personal:'#27AE60', other:'#F39C12' };
         const TYPE_ICONS = { work:'💼', meeting:'📋', personal:'🏠', other:'📌' };
+        const TYPE_NAMES = { work:'工作', meeting:'会议', personal:'个人', other:'其他' };
         const WEEK_NAMES = ['日','一','二','三','四','五','六'];
 
         function loadTasks() {
@@ -298,47 +349,27 @@
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
                     tasks = JSON.parse(stored);
+                    // 兼容旧数据
                     tasks.forEach(t => {
-                        if (t.startHour !== undefined && t.endHour === undefined) {
-                            t.startTime = t.startTime || `${String(t.startHour).padStart(2,'0')}:00`;
-                            t.endTime = t.endTime || `${String(t.startHour+1).padStart(2,'0')}:00`;
-                        }
+                        if (t.completed === undefined) t.completed = false;
+                        if (t.completionNote === undefined) t.completionNote = '';
                     });
                 } else tasks = [];
             } catch (e) { tasks = []; }
             renderCalendar();
         }
+        function saveTasks() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) { alert('存储失败'); } }
 
-        function saveTasks() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
-            catch (e) { alert('存储失败，可能空间已满'); }
-        }
-
-        // === 日历渲染 ===
         function renderCalendar() {
-            document.getElementById('currentDate').textContent = formatDate(currentDate);
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-
-            if (currentView === 'day') {
-                prevBtn.textContent = '◀ 前一天';
-                nextBtn.textContent = '后一天 ▶';
-            } else {
-                prevBtn.textContent = '◀ 上周';
-                nextBtn.textContent = '下周 ▶';
-            }
-
+            document.getElementById('currentDate').textContent = `${currentDate.getFullYear()}年${currentDate.getMonth()+1}月`;
             renderMonthOverview();
-            renderDetailView();
         }
 
-        // 月总览
         function renderMonthOverview() {
             const overview = document.getElementById('monthOverview');
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const today = formatDateISO(new Date());
-            const selDate = formatDateISO(currentDate);
 
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
@@ -356,7 +387,7 @@
             </div>`;
 
             html += '<div class="mini-weekdays">';
-            WEEK_NAMES.forEach(w => { html += `<div>${w}</div>`; });
+            WEEK_NAMES.forEach(w => html += `<div>${w}</div>`);
             html += '</div><div class="mini-grid">';
 
             for (let i = 0; i < totalCells; i++) {
@@ -377,8 +408,7 @@
 
                 const dayTasks = tasks.filter(t => t.date === dateStr);
                 const isToday = dateStr === today;
-                const isSelected = dateStr === selDate;
-                const cls = 'mini-cell' + (isSelected ? ' selected' : '') + (isToday ? ' today' : '') + (!isCurrentMonth ? ' other-month' : '');
+                const cls = 'mini-cell' + (isToday ? ' today' : '') + (!isCurrentMonth ? ' other-month' : '');
 
                 let dotsHtml = '';
                 if (dayTasks.length > 0) {
@@ -386,9 +416,7 @@
                     dotsHtml = '<div class="mini-dots">' + uniqueColors.slice(0, 4).map(c => `<div class="mini-dot" style="background:${c}"></div>`).join('') + '</div>';
                 }
 
-                html += `<div class="${cls}" onclick="jumpToDate('${dateStr}')">
-                    ${dayNum}${dotsHtml}
-                </div>`;
+                html += `<div class="${cls}" onclick="openDayTasks('${dateStr}')">${dayNum}${dotsHtml}</div>`;
             }
             html += '</div>';
             overview.innerHTML = html;
@@ -399,70 +427,200 @@
             renderCalendar();
         }
 
-        function jumpToDate(dateStr) {
-            currentDate = new Date(dateStr + 'T00:00:00');
-            setView('day');
-        }
+        // ===== 日任务列表弹窗 =====
+        function openDayTasks(dateStr) {
+            currentDayStr = dateStr;
+            const date = new Date(dateStr + 'T00:00:00');
+            const wd = ['周日','周一','周二','周三','周四','周五','周六'][date.getDay()];
+            const title = `${dateStr} ${wd} 的任务`;
+            document.getElementById('dayTasksTitle').textContent = title;
 
-        // 日/周详细视图
-        function renderDetailView() {
-            const view = document.getElementById('calendarView');
-            if (currentView === 'day') renderDayView(view);
-            else renderWeekView(view);
-        }
+            const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+            const body = document.getElementById('dayTasksBody');
 
-        function renderDayView(view) {
-            const dateStr = formatDateISO(currentDate);
-            const dayTasks = tasks.filter(t => t.date === dateStr);
-            let html = '<div class="day-view-wrapper">';
-            for (let hour = 0; hour < 24; hour++) {
-                html += `<div class="time-slot"><div class="time-label">${String(hour).padStart(2,'0')}:00</div><div class="time-cell" onclick="openAddModal(${hour})"></div></div>`;
+            if (dayTasks.length === 0) {
+                body.innerHTML = '<div class="day-empty">该日暂无任务<br>点击下方按钮添加</div>';
+            } else {
+                body.innerHTML = dayTasks.map(task => renderDayTaskItem(task)).join('');
             }
-            html += '</div><div class="task-overlay">';
-            dayTasks.forEach(task => { html += renderTimelineTask(task); });
-            html += '</div>';
-            view.innerHTML = html;
+
+            document.getElementById('dayTasksModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
-        function renderWeekView(view) {
-            const weekStart = getWeekStart(currentDate);
-            const weekDays = [];
-            for (let i = 0; i < 7; i++) { const d = new Date(weekStart); d.setDate(d.getDate() + i); weekDays.push(d); }
-            const today = formatDateISO(new Date());
-            let html = '<div class="week-view-wrapper">';
-            html += '<div class="week-header"><div></div>';
-            weekDays.forEach((day, i) => { const ds = formatDateISO(day); html += `<div class="week-day ${ds===today?'today':''}"><div>周${WEEK_NAMES[i]}</div><div style="font-weight:600;font-size:14px">${day.getDate()}</div></div>`; });
-            html += '</div><div class="week-grid">';
-            for (let hour = 0; hour < 24; hour++) {
-                html += `<div class="time-slot"><div class="time-label">${String(hour).padStart(2,'0')}</div>`;
-                weekDays.forEach(day => { const ds = formatDateISO(day); html += `<div class="time-cell ${ds===today?'today':''}" onclick="openAddModal(${hour},'${ds}')"></div>`; });
-                html += '</div>';
-            }
-            html += '</div><div class="task-overlay">';
-            weekDays.forEach((day, di) => {
-                const ds = formatDateISO(day);
-                tasks.filter(t => t.date === ds).forEach(task => { html += renderTimelineTask(task, true, di); });
-            });
-            html += '</div></div>';
-            view.innerHTML = html;
-        }
-
-        function renderTimelineTask(task, isWeek = false, dayIndex = 0) {
-            const startMinutes = timeToMinutes(task.startTime);
-            const endMinutes = timeToMinutes(task.endTime);
-            const duration = Math.max(endMinutes - startMinutes, 20);
-            const conflict = hasConflict(task);
+        function renderDayTaskItem(task) {
             const color = task.color || TYPE_COLORS[task.type] || '#4A90D9';
-            const icon = TYPE_ICONS[task.type] || '📌';
-            let style = `top: ${startMinutes}px; height: ${duration}px; background: ${color};`;
-            if (isWeek) { style += ` left: ${(dayIndex/7)*100}%; width: ${100/7}%;`; }
-            const showTime = duration >= 28;
-            return `<div class="timeline-task ${conflict ? 'conflict' : ''}" style="${style}" onclick="event.stopPropagation(); openEditModal(${task.id})">
-                <div class="task-title">${escapeHtml(task.title)}</div>
-                ${showTime ? `<div class="task-time">${task.startTime}-${task.endTime}</div>` : `<div class="task-type-icon">${icon}</div>`}
-            </div>`;
+            const typeLabel = TYPE_NAMES[task.type] || '其他';
+            const completed = task.completed || false;
+            const note = task.completionNote || '';
+            const cls = 'day-task-item' + (completed ? ' completed' : '');
+
+            return `
+                <div class="${cls}" style="border-left-color: ${color}">
+                    <div class="task-checkbox ${completed ? 'checked' : ''}" onclick="event.stopPropagation(); toggleTaskComplete(${task.id})"></div>
+                    <div class="task-info">
+                        <div class="task-info-header">
+                            <span class="task-title">${escapeHtml(task.title)}</span>
+                            <span class="task-time-range">${task.startTime} - ${task.endTime}</span>
+                        </div>
+                        <div class="task-type-tag">${TYPE_ICONS[task.type] || '📌'} ${typeLabel}</div>
+                        <textarea class="completion-textarea" placeholder="记录完成情况..."
+                            onblur="updateTaskNote(${task.id}, this.value)">${escapeHtml(note)}</textarea>
+                        <div class="task-actions">
+                            <button onclick="openEditTask(${task.id})">✏️ 编辑</button>
+                            <button onclick="deleteDayTask(${task.id})">🗑️ 删除</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
+        function closeDayTasksModal() {
+            document.getElementById('dayTasksModal').classList.remove('active');
+            document.body.style.overflow = '';
+            currentDayStr = null;
+        }
+
+        function openAddTaskFromDay() {
+            closeDayTasksModal();
+            openAddModal(9, currentDayStr);
+        }
+
+        function toggleTaskComplete(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks();
+                if (currentDayStr) openDayTasks(currentDayStr);
+                renderCalendar();
+            }
+        }
+
+        function updateTaskNote(taskId, note) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task && task.completionNote !== note) {
+                task.completionNote = note;
+                saveTasks();
+            }
+        }
+
+        function deleteDayTask(taskId) {
+            if (confirm('确定删除这个任务吗？')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                saveTasks();
+                if (currentDayStr) openDayTasks(currentDayStr);
+                renderCalendar();
+            }
+        }
+
+        function openEditTask(taskId) {
+            closeDayTasksModal();
+            openEditModal(taskId);
+        }
+
+        // ===== 添加/编辑任务弹窗 =====
+        function openAddModal(hour = 9, dateStr = null) {
+            editingTaskId = null;
+            document.getElementById('formModalTitle').textContent = '添加任务';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDate').value = dateStr || formatDateISO(currentDate);
+            document.getElementById('taskStartTime').value = `${String(hour).padStart(2,'0')}:00`;
+            document.getElementById('taskEndTime').value = `${String(hour+1).padStart(2,'0')}:00`;
+            document.getElementById('taskType').value = 'work';
+            document.getElementById('taskReminder').value = '0';
+            document.getElementById('taskCompletionNote').value = '';
+            document.getElementById('conflictWarning').classList.remove('show');
+            selectedColor = null;
+            initColorPicker();
+            onTypeChange();
+            document.getElementById('taskFormModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openEditModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            editingTaskId = taskId;
+            document.getElementById('formModalTitle').textContent = '编辑任务';
+            document.getElementById('deleteBtn').style.display = 'block';
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskDate').value = task.date;
+            document.getElementById('taskStartTime').value = task.startTime;
+            document.getElementById('taskEndTime').value = task.endTime;
+            document.getElementById('taskType').value = task.type;
+            document.getElementById('taskReminder').value = task.reminderMinutes || '0';
+            document.getElementById('taskCompletionNote').value = task.completionNote || '';
+            document.getElementById('conflictWarning').classList.remove('show');
+            selectedColor = task.color || null;
+            initColorPicker();
+            document.getElementById('taskFormModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTaskFormModal() {
+            document.getElementById('taskFormModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function getTaskFromForm() {
+            return {
+                id: editingTaskId,
+                title: document.getElementById('taskTitle').value.trim(),
+                date: document.getElementById('taskDate').value,
+                startTime: document.getElementById('taskStartTime').value,
+                endTime: document.getElementById('taskEndTime').value,
+                type: document.getElementById('taskType').value,
+                color: selectedColor,
+                reminderMinutes: parseInt(document.getElementById('taskReminder').value) || 0,
+                completionNote: document.getElementById('taskCompletionNote').value,
+                completed: editingTaskId ? (tasks.find(t => t.id === editingTaskId)?.completed || false) : false
+            };
+        }
+
+        function saveTask() {
+            const task = getTaskFromForm();
+            if (!task.title) { alert('请输入任务标题'); return; }
+            if (!task.date) { alert('请选择日期'); return; }
+            if (task.startTime >= task.endTime) { alert('结束时间必须晚于开始时间'); return; }
+            if (task.id !== null) {
+                const idx = tasks.findIndex(t => t.id === task.id);
+                if (idx !== -1) {
+                    task.completed = tasks[idx].completed;
+                    task.completionNote = task.completionNote !== undefined ? task.completionNote : tasks[idx].completionNote;
+                    tasks[idx] = task;
+                }
+            } else { task.id = Date.now(); tasks.push(task); }
+            saveTasks();
+            closeTaskFormModal();
+            renderCalendar();
+        }
+
+        function deleteTask() {
+            if (editingTaskId !== null && confirm('确定删除这个任务吗？')) {
+                tasks = tasks.filter(t => t.id !== editingTaskId);
+                saveTasks(); closeTaskFormModal(); renderCalendar();
+            }
+        }
+
+        // ===== 颜色选择器 =====
+        function initColorPicker() {
+            const picker = document.getElementById('colorPicker');
+            picker.innerHTML = '';
+            TASK_COLORS.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-option' + (selectedColor === color ? ' selected' : '');
+                div.style.backgroundColor = color;
+                div.dataset.color = color;
+                div.onclick = () => selectColor(color);
+                picker.appendChild(div);
+            });
+        }
+        function selectColor(color) { selectedColor = color; document.querySelectorAll('.color-option').forEach(el => el.classList.toggle('selected', el.dataset.color === color)); }
+        function onTypeChange() { const type = document.getElementById('taskType').value; if (!selectedColor) selectColor(TYPE_COLORS[type]); }
+
+        // ===== 冲突检测 =====
         function hasConflict(newTask, excludeId = null) {
             return tasks.some(t => {
                 if (excludeId && t.id === excludeId) return false;
@@ -472,9 +630,7 @@
                 return (ns < ee && ne > es);
             });
         }
-
         function timeToMinutes(ts) { const [h,m] = ts.split(':').map(Number); return h*60+m; }
-
         function checkConflicts() {
             const task = getTaskFromForm();
             const warning = document.getElementById('conflictWarning');
@@ -491,144 +647,11 @@
             } else warning.classList.remove('show');
         }
 
-        function initColorPicker() {
-            const picker = document.getElementById('colorPicker');
-            picker.innerHTML = '';
-            TASK_COLORS.forEach(color => {
-                const div = document.createElement('div');
-                div.className = 'color-option' + (selectedColor === color ? ' selected' : '');
-                div.style.backgroundColor = color;
-                div.dataset.color = color;
-                div.onclick = () => selectColor(color);
-                picker.appendChild(div);
-            });
-        }
-        function selectColor(color) {
-            selectedColor = color;
-            document.querySelectorAll('.color-option').forEach(el => el.classList.toggle('selected', el.dataset.color === color));
-        }
-        function onTypeChange() {
-            const type = document.getElementById('taskType').value;
-            if (!selectedColor) selectColor(TYPE_COLORS[type]);
-        }
+        // ===== 工具函数 =====
+        function formatDateISO(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-        function openAddModal(hour = 9, dateStr = null) {
-            editingTaskId = null;
-            document.getElementById('modalTitle').textContent = '添加任务';
-            document.getElementById('deleteBtn').style.display = 'none';
-            document.getElementById('taskTitle').value = '';
-            document.getElementById('taskNotes').value = '';
-            document.getElementById('taskType').value = 'work';
-            document.getElementById('taskDate').value = dateStr || formatDateISO(currentDate);
-            document.getElementById('taskStartTime').value = `${String(hour).padStart(2,'0')}:00`;
-            document.getElementById('taskEndTime').value = `${String(hour+1).padStart(2,'0')}:00`;
-            document.getElementById('taskReminder').value = '0';
-            document.getElementById('conflictWarning').classList.remove('show');
-            selectedColor = null;
-            initColorPicker();
-            onTypeChange();
-            document.getElementById('taskModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function openEditModal(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-            editingTaskId = taskId;
-            document.getElementById('modalTitle').textContent = '编辑任务';
-            document.getElementById('deleteBtn').style.display = 'block';
-            document.getElementById('taskId').value = task.id;
-            document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskDate').value = task.date;
-            document.getElementById('taskStartTime').value = task.startTime;
-            document.getElementById('taskEndTime').value = task.endTime;
-            document.getElementById('taskType').value = task.type;
-            document.getElementById('taskNotes').value = task.notes || '';
-            document.getElementById('taskReminder').value = task.reminderMinutes || '0';
-            document.getElementById('conflictWarning').classList.remove('show');
-            selectedColor = task.color || null;
-            initColorPicker();
-            document.getElementById('taskModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            document.getElementById('taskModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function getTaskFromForm() {
-            return {
-                id: editingTaskId,
-                title: document.getElementById('taskTitle').value.trim(),
-                date: document.getElementById('taskDate').value,
-                startTime: document.getElementById('taskStartTime').value,
-                endTime: document.getElementById('taskEndTime').value,
-                type: document.getElementById('taskType').value,
-                color: selectedColor,
-                reminderMinutes: parseInt(document.getElementById('taskReminder').value) || 0,
-                notes: document.getElementById('taskNotes').value
-            };
-        }
-
-        function saveTask() {
-            const task = getTaskFromForm();
-            if (!task.title) { alert('请输入任务标题'); return; }
-            if (!task.date) { alert('请选择日期'); return; }
-            if (task.startTime >= task.endTime) { alert('结束时间必须晚于开始时间'); return; }
-            if (task.id !== null) {
-                const idx = tasks.findIndex(t => t.id === task.id);
-                if (idx !== -1) tasks[idx] = task;
-            } else { task.id = Date.now(); tasks.push(task); }
-            saveTasks();
-            closeModal();
-            renderCalendar();
-        }
-
-        function deleteTask() {
-            if (editingTaskId !== null && confirm('确定删除这个任务吗？')) {
-                tasks = tasks.filter(t => t.id !== editingTaskId);
-                saveTasks(); closeModal(); renderCalendar();
-            }
-        }
-
-        function prevPeriod() {
-            if (currentView === 'day') currentDate.setDate(currentDate.getDate() - 1);
-            else currentDate.setDate(currentDate.getDate() - 7);
-            renderCalendar();
-        }
-        function nextPeriod() {
-            if (currentView === 'day') currentDate.setDate(currentDate.getDate() + 1);
-            else currentDate.setDate(currentDate.getDate() + 7);
-            renderCalendar();
-        }
-        function setView(view) {
-            currentView = view;
-            document.getElementById('dayViewBtn').classList.toggle('active', view === 'day');
-            document.getElementById('weekViewBtn').classList.toggle('active', view === 'week');
-            renderCalendar();
-        }
-
-        function formatDate(date) {
-            const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
-            const wd = ['周日','周一','周二','周三','周四','周五','周六'][date.getDay()];
-            return `${y}年${m}月${d}日 ${wd}`;
-        }
-        function formatDateISO(date) {
-            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-        }
-        function getWeekStart(date) {
-            const d = new Date(date);
-            d.setDate(d.getDate() - d.getDay());
-            return d;
-        }
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // === 通知 ===
+        // ===== 通知 =====
         function initNotifications() {
             if (!('Notification' in window)) { document.getElementById('notifBtn').style.display = 'none'; return; }
             notificationEnabled = Notification.permission === 'granted';
@@ -647,7 +670,7 @@
             } else {
                 Notification.requestPermission().then(p => {
                     if (p === 'granted') { notificationEnabled = true; updateNotificationBtn(); startNotificationTimer(); new Notification('🔔 通知已开启', { body: '您将在任务开始前收到提醒', icon: 'icon.svg' }); }
-                    else alert('需要通知权限才能发送提醒，请重新点击按钮授权');
+                    else alert('需要通知权限才能发送提醒');
                 });
             }
         }
@@ -684,7 +707,7 @@
                 const tl = {work:'💼工作', meeting:'📋会议', personal:'🏠个人', other:'📌其他'}[task.type] || '📌任务';
                 const mins = rm < 60 ? `${rm}分钟` : `${rm/60}小时`;
                 new Notification(`⏰ ${tl}提醒`, { body: `${task.title}\n开始时间：${task.startTime}（${mins}后）`, icon: 'icon.svg', badge: 'icon.svg', tag: `calendar-task-${task.id}`, requireInteraction: false, silent: false });
-            } catch(e) { console.error('Notification error:', e); }
+            } catch(e) { console.error(e); }
         }
 
         document.addEventListener('DOMContentLoaded', () => { loadTasks(); initNotifications(); });
