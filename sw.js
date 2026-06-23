@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calendar-app-v1';
+const CACHE_NAME = 'calendar-app-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
+    }).then(() => {
+      return self.skipWaiting();
     })
   );
 });
@@ -21,6 +23,8 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
+    }).then(() => {
+      return self.clients.claim();
     })
   );
 });
