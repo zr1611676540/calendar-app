@@ -20,7 +20,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .appbar-title{font-size:19px;font-weight:700;text-align:center;margin-bottom:10px}
 .appbar-nav{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .appbar-nav button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600}
-.appbar-nav button.active{background:rgba(255,255,255,.35)}
 .appbar-nav button:active{background:rgba(255,255,255,.35)}
 .appbar-date{font-size:15px;font-weight:700;flex:1;text-align:center}
 .notif-toggle{font-size:18px;padding:8px 11px!important}
@@ -141,7 +140,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <span class="appbar-date" id="topDate">--</span>
       <button onclick="nextDay()">后一天 ▶</button>
       <button class="notif-toggle" id="notifBtn" onclick="toggleNotif()">🔔</button>
-<button id="reviewBtn" onclick="toggleReview()" style="background:rgba(255,255,255,.15);padding:8px 10px">📊</button>
     </div>
   </div>
   <div class="month-strip" id="monthStrip"></div>
@@ -149,9 +147,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div class="task-list" id="taskList"></div>
 
-<div class="month-review" id="monthReview" style="display:none"></div>
-
 <button class="fab" onclick="openModal()">+</button>
+
+<div class="fab" onclick="openReviewModal()" style="bottom:calc(90px + env(safe-area-inset-bottom));background:linear-gradient(135deg,#5856D6 0%,#32ADE6 100%);box-shadow:0 4px 16px rgba(88,86,214,.4)">📊</div>
 
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="sheet">
@@ -221,6 +219,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<div class="overlay" id="reviewModal" onclick="if(event.target===this)closeReviewModal()">
+  <div class="sheet" id="reviewContent"></div>
+</div>
+
 <script>
 const COLORS=['#007AFF','#FF3B30','#AF52DE','#34C759','#FF9500','#FF2D55','#5AC8FA','#5856D6','#FF6482','#A2845E','#00C7BE','#32ADE6','#64D2FF','#BF5AF2','#8E8E93','#C7C7CC'];
 const TYPE_COLOR={work:'#007AFF',meeting:'#AF52DE',personal:'#34C759',other:'#FF9500'};
@@ -236,7 +238,6 @@ let editId=null;
 let selColor=null;
 let notifOn=false;
 let notifTimer=null;
-let showReview=false;
 let touchStartX=0;
 let touchCurrentX=0;
 let swipedElement=null;
@@ -255,7 +256,7 @@ function render(){
   const y=curDate.getFullYear(),m=curDate.getMonth()+1,d=curDate.getDate(),w=WEEK[curDate.getDay()];
   document.getElementById('topDate').textContent=`${y}年${m}月${d}日 周${w}`;
   renderMonth();
-  if(showReview){renderMonthReview();}else{renderTaskList();}
+  renderTaskList();
 }
 
 /* ===== 月总览 ===== */
@@ -291,9 +292,6 @@ function renderMonth(){
 
 /* ===== 任务列表视图 ===== */
 function renderTaskList(){
-  document.getElementById('monthReview').style.display='none';
-  document.getElementById('taskList').style.display='block';
-  document.getElementById('reviewBtn').classList.remove('active');
   const ds=fmtISO(curDate);
   const ts=tasks.filter(t=>t.date===ds).sort((a,b)=>toMin(a.start)-toMin(b.start));
   const el=document.getElementById('taskList');
@@ -476,30 +474,16 @@ function toggleComplete(id){
   if(t){t.completed=!t.completed;persist();render();}
 }
 
-/* 月度复盘视图 */
-function toggleReview(){
-  showReview=!showReview;
-  document.getElementById('reviewBtn').classList.toggle('active');
-  if(showReview){
-    document.getElementById('taskList').style.display='none';
-    renderMonthReview();
-  }else{
-    document.getElementById('monthReview').style.display='none';
-    document.getElementById('taskList').style.display='block';
-  }
-}
-function renderMonthReview(){
-  document.getElementById('taskList').style.display='none';
-  const el=document.getElementById('monthReview');
+/* 月度复盘视图 - 独立弹窗 */
+function openReviewModal(){
   const y=curDate.getFullYear(),m=curDate.getMonth()+1;
   const monthStr=`${y}-${String(m).padStart(2,'0')}`;
   const monthTasks=tasks.filter(t=>t.date.startsWith(monthStr));
   const total=monthTasks.length;
   const completed=monthTasks.filter(t=>t.completed).length;
-  const rate=total>0?Math.round(completed/total*100):0;
   
-  let h=`<div class="month-review-header"><h3>📊 ${y}年${m}月 任务复盘</h3><span class="sub">${total} 项任务</span></div>`;
-  h+='<div class="month-review-body">';
+  const el=document.getElementById('reviewModal');
+  let h=`<h2>📊 ${y}年${m}月 任务复盘</h2>`;
   h+=`<div class="review-stats">
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总任务数</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--success)">${completed}</div><div class="stat-label">已完成</div></div>
@@ -518,9 +502,15 @@ function renderMonthReview(){
     });
     h+='</div>';
   }
-  h+='</div>';
-  el.innerHTML=h;
-  el.style.display='block';
+  h+='<div class="btns"><button class="btn btn-p" onclick="closeReviewModal()">关闭</button></div>';
+  
+  document.getElementById('reviewContent').innerHTML=h;
+  el.classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeReviewModal(){
+  document.getElementById('reviewModal').classList.remove('on');
+  document.body.style.overflow='auto';
 }
 
 function initCP(){
