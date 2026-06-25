@@ -54,6 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .task-card{display:flex;gap:14px;padding:16px;border-radius:14px;margin-bottom:12px;background:#fff;border:1.5px solid var(--border);position:relative;overflow:hidden;touch-action:pan-y;transition:transform .2s}
 .task-card.swiping{transition:none}
 .task-card.swiped{transform:translateX(-80px)}
+.task-card.swiping-back{transition:transform .2s}
 .task-delete-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:64px;height:64px;background:var(--danger);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s}
 .task-card.swiped .task-delete-btn{opacity:1;pointer-events:auto}
 .task-card:last-child{margin-bottom:0}
@@ -431,15 +432,31 @@ function handleTouchMove(e,el){
   if(diff<0){
     const move=Math.min(Math.abs(diff),80);
     el.style.transform=`translateX(-${move}px)`;
+  }else if(el.classList.contains('swiped')){
+    const move=80-Math.min(diff,80);
+    el.style.transform=`translateX(-${move}px)`;
   }
 }
 function handleTouchEnd(e,el){
   el.classList.remove('swiping');
   const diff=touchCurrentX-touchStartX;
-  if(diff<-40){
-    el.classList.add('swiped');
+  if(el.classList.contains('swiped')){
+    if(diff>40){
+      el.classList.remove('swiped');
+      el.classList.add('swiping-back');
+      setTimeout(()=>{
+        el.classList.remove('swiping-back');
+        el.style.transform='';
+      },200);
+    }else{
+      el.classList.add('swiped');
+    }
   }else{
-    el.style.transform='';
+    if(diff<-40){
+      el.classList.add('swiped');
+    }else{
+      el.style.transform='';
+    }
   }
   swipedElement=null;
 }
