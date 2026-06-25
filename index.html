@@ -25,6 +25,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .notif-toggle{font-size:18px;padding:8px 11px!important}
 .notif-toggle.off{opacity:.4}
 
+/* 视图切换标签 */
+.view-tabs{background:var(--card);margin:0 12px;border-radius:16px 16px 0 0;padding:12px 14px;display:flex;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.view-tab{flex:1;padding:10px 16px;border:none;border-radius:12px;background:var(--bg);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.view-tab:active{transform:scale(.98)}
+.view-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(0,122,255,.3)}
+
 /* 月总览 */
 .month-strip{background:var(--card);margin:0 12px;border-radius:0 0 16px 16px;padding:12px 14px 14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .month-strip-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px}
@@ -105,6 +111,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* FAB */
 .fab{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));right:22px;width:58px;height:58px;background:linear-gradient(135deg,var(--primary) 0%,var(--primaryD) 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,122,255,.4);font-size:30px;color:#fff;border:none;z-index:200;cursor:pointer}
 .fab:active{transform:scale(.92)}
+.fab-review{display:none}
 
 /* 弹窗 */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:300;padding:16px}
@@ -142,14 +149,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <button class="notif-toggle" id="notifBtn" onclick="toggleNotif()">🔔</button>
     </div>
   </div>
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabTask" onclick="switchView('task')">📋 任务</button>
+    <button class="view-tab" id="tabReview" onclick="switchView('review')">📊 复盘</button>
+  </div>
   <div class="month-strip" id="monthStrip"></div>
 </div>
 
 <div class="task-list" id="taskList"></div>
 
-<button class="fab" onclick="openModal()">+</button>
+<div class="month-review" id="monthReview" style="display:none"></div>
 
-<div class="fab" onclick="openReviewModal()" style="bottom:calc(90px + env(safe-area-inset-bottom));background:linear-gradient(135deg,#5856D6 0%,#32ADE6 100%);box-shadow:0 4px 16px rgba(88,86,214,.4)">📊</div>
+<button class="fab" onclick="openModal()">+</button>
 
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="sheet">
@@ -219,10 +230,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
-<div class="overlay" id="reviewModal" onclick="if(event.target===this)closeReviewModal()">
-  <div class="sheet" id="reviewContent"></div>
-</div>
-
 <script>
 const COLORS=['#007AFF','#FF3B30','#AF52DE','#34C759','#FF9500','#FF2D55','#5AC8FA','#5856D6','#FF6482','#A2845E','#00C7BE','#32ADE6','#64D2FF','#BF5AF2','#8E8E93','#C7C7CC'];
 const TYPE_COLOR={work:'#007AFF',meeting:'#AF52DE',personal:'#34C759',other:'#FF9500'};
@@ -238,6 +245,7 @@ let editId=null;
 let selColor=null;
 let notifOn=false;
 let notifTimer=null;
+let currentView='task';
 let touchStartX=0;
 let touchCurrentX=0;
 let swipedElement=null;
@@ -256,7 +264,7 @@ function render(){
   const y=curDate.getFullYear(),m=curDate.getMonth()+1,d=curDate.getDate(),w=WEEK[curDate.getDay()];
   document.getElementById('topDate').textContent=`${y}年${m}月${d}日 周${w}`;
   renderMonth();
-  renderTaskList();
+  if(currentView==='task'){renderTaskList();}else{renderMonthReview();}
 }
 
 /* ===== 月总览 ===== */
@@ -288,6 +296,24 @@ function renderMonth(){
   }
   h+='</div>';
   el.innerHTML=h;
+}
+
+/* ===== 视图切换 ===== */
+function switchView(view){
+  currentView=view;
+  if(view==='task'){
+    document.getElementById('tabTask').classList.add('active');
+    document.getElementById('tabReview').classList.remove('active');
+    document.getElementById('taskList').style.display='block';
+    document.getElementById('monthReview').style.display='none';
+    renderTaskList();
+  }else{
+    document.getElementById('tabTask').classList.remove('active');
+    document.getElementById('tabReview').classList.add('active');
+    document.getElementById('taskList').style.display='none';
+    document.getElementById('monthReview').style.display='block';
+    renderMonthReview();
+  }
 }
 
 /* ===== 任务列表视图 ===== */
@@ -474,16 +500,17 @@ function toggleComplete(id){
   if(t){t.completed=!t.completed;persist();render();}
 }
 
-/* 月度复盘视图 - 独立弹窗 */
-function openReviewModal(){
+/* 月度复盘视图 */
+function renderMonthReview(){
+  const el=document.getElementById('monthReview');
   const y=curDate.getFullYear(),m=curDate.getMonth()+1;
   const monthStr=`${y}-${String(m).padStart(2,'0')}`;
   const monthTasks=tasks.filter(t=>t.date.startsWith(monthStr));
   const total=monthTasks.length;
   const completed=monthTasks.filter(t=>t.completed).length;
   
-  const el=document.getElementById('reviewModal');
-  let h=`<h2>📊 ${y}年${m}月 任务复盘</h2>`;
+  let h=`<div class="month-review-header"><h3>📊 ${y}年${m}月 任务复盘</h3><span class="sub">${total} 项任务</span></div>`;
+  h+='<div class="month-review-body">';
   h+=`<div class="review-stats">
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">总任务数</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--success)">${completed}</div><div class="stat-label">已完成</div></div>
@@ -502,15 +529,8 @@ function openReviewModal(){
     });
     h+='</div>';
   }
-  h+='<div class="btns"><button class="btn btn-p" onclick="closeReviewModal()">关闭</button></div>';
-  
-  document.getElementById('reviewContent').innerHTML=h;
-  el.classList.add('on');
-  document.body.style.overflow='hidden';
-}
-function closeReviewModal(){
-  document.getElementById('reviewModal').classList.remove('on');
-  document.body.style.overflow='auto';
+  h+='</div>';
+  el.innerHTML=h;
 }
 
 function initCP(){
