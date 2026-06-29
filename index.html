@@ -178,8 +178,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="warn" id="warn"></div>
 
     <div class="fg">
-      <label>任务标题</label>
-      <input type="text" id="mTitle" placeholder="例如：晨会">
+      <label>任务标题 <span style="color:var(--text2);font-weight:600;font-size:12px">（可选）</span></label>
+      <input type="text" id="mTitle" placeholder="例如：晨会（可留空）">
     </div>
 
     <div class="fg">
@@ -508,7 +508,6 @@ function getForm(){
 }
 function saveTask(){
   const t=getForm();
-  if(!t.title){alert('请输入任务标题');return;}
   if(!t.date){alert('请选择日期');return;}
   if(t.start>=t.end){alert('结束时间必须晚于开始时间');return;}
   if(editId!==null){const i=tasks.findIndex(x=>x.id===editId);if(i>-1)tasks[i]=t;}
