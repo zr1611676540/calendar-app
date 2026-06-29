@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .task-card.swiping{transition:none}
 .task-card.swiped{transform:translateX(-80px)}
 .task-card.swiping-back{transition:transform .2s}
-.task-delete-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:64px;height:64px;background:var(--danger);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s}
+.task-delete-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:80px;height:64px;background:var(--danger);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s}
 .task-card.swiped .task-delete-btn{opacity:1;pointer-events:auto}
 .task-card:last-child{margin-bottom:0}
 .task-card:active{background:#F8F8F8}
@@ -184,7 +184,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="row2">
       <div class="fg">
         <label>开始时间</label>
-        <input type="time" id="mStart" onchange="checkConflict()">
+        <input type="time" id="mStart" onchange="adjustEndTime();checkConflict()">
       </div>
       <div class="fg">
         <label>结束时间</label>
@@ -202,7 +202,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       </select>
     </div>
 
-    <div class="fg">
+    <div class="fg" style="display:none">
       <label>颜色</label>
       <div class="cp" id="colorPick"></div>
     </div>
@@ -414,13 +414,24 @@ return `<div class="task-card ${completed}" style="border-color:${c}33" data-id=
       ${t.note?`<div class="task-content-note">${esc(t.note)}</div>`:''}
     </div>
     <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:${c};border-radius:14px 0 0 14px"></div>
-    <div class="task-delete-btn" onclick="event.stopPropagation();delTaskById(${t.id})">🗑️</div>
+    <div class="task-delete-btn" onclick="event.stopPropagation();delTaskById(${t.id})">删除</div>
   </div>`;
 }
 
 function toMin(s){const[h,m]=s.split(':').map(Number);return h*60+m;}
 function fmtISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+function adjustEndTime(){
+  const startEl=document.getElementById('mStart');
+  const endEl=document.getElementById('mEnd');
+  if(!startEl.value||!endEl.value)return;
+  if(toMin(endEl.value)<=toMin(startEl.value)){
+    const[startH,startM]=startEl.value.split(':').map(Number);
+    let newEndH=startH+1;
+    if(newEndH>=24){newEndH=23;}
+    endEl.value=`${String(newEndH).padStart(2,'0')}:${String(startM).padStart(2,'0')}`;
+  }
+}
 
 /* 导航 */
 function prevDay(){curDate.setDate(curDate.getDate()-1);render();}
@@ -438,7 +449,7 @@ function openModal(hr=9){
   document.getElementById('mStart').value=`${String(hr).padStart(2,'0')}:00`;
   document.getElementById('mEnd').value=`${String(hr+1).padStart(2,'0')}:00`;
   document.getElementById('mType').value='work';
-  document.getElementById('mReminder').value='0';
+  document.getElementById('mReminder').value='5';
   document.getElementById('mNote').value='';
   document.getElementById('warn').classList.remove('on');
   selColor=null;initCP();typeChange();
